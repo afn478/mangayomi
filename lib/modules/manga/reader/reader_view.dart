@@ -1168,7 +1168,9 @@ class _MangaChapterPageGalleryState
       }
     }
     ref.read(_currentReaderMode.notifier).state = readerMode;
-    _setReaderMode(readerMode, ref, forceIndex: _currentIndex);
+    // forceIndex is a page, not a double-page spread: _currentIndex is already
+    // a spread in double page mode and would be halved a second time.
+    _setReaderMode(readerMode, ref, forceIndex: _savedPageIndex);
 
     if (!readerMode.isVerticalContinuous) {
       _autoScroll.value = false;
