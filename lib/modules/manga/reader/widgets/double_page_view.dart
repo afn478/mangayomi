@@ -243,6 +243,9 @@ class _DoublePageViewState extends State<DoublePageView>
     return PhotoViewGestureDetectorScope(
       axis: widget.scrollDirection,
       child: PhotoView.customChild(
+        // PhotoView paints black by default; the reader's background shows
+        // through instead, as it does behind a single page.
+        backgroundDecoration: const BoxDecoration(color: Colors.transparent),
         controller: _photoViewController,
         scaleStateController: _photoViewScaleStateController,
         basePosition: _scalePosition,

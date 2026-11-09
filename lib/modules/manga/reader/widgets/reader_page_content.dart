@@ -111,7 +111,7 @@ class ReaderPageContent extends ConsumerWidget {
     final bool isHorizontalContinuous = readerMode.isHorizontalContinuous;
 
     if (readerMode.isContinuous) {
-      return ImageViewWebtoon(
+      final strip = ImageViewWebtoon(
         pages: pages,
         listController: listController,
         scrollController: continuousScrollController,
@@ -159,6 +159,13 @@ class ReaderPageContent extends ConsumerWidget {
           }
           onPageImageLoaded(index);
         },
+      );
+      // The chosen background behind the strip, so it shows in the gaps
+      // between pages and in the side padding, as it does behind the paged
+      // views.
+      return ColoredBox(
+        color: getBackgroundColor(backgroundColor) ?? context.shiori.color.ink0,
+        child: strip,
       );
     }
 
