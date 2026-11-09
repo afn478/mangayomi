@@ -182,6 +182,9 @@ class ReaderPageContent extends ConsumerWidget {
               physics: isCurrentPageZoomed
                   ? const NeverScrollableScrollPhysics()
                   : const ClampingScrollPhysics(),
+              // The pages either side are built, and their images loaded,
+              // before they slide in.
+              allowImplicitScrolling: true,
               itemBuilder: (context, index) {
                 final singleFirst = ref.watch(
                   doublePageSingleFirstPageStateProvider,
@@ -240,6 +243,9 @@ class ReaderPageContent extends ConsumerWidget {
               physics: isCurrentPageZoomed
                   ? const NeverScrollableScrollPhysics()
                   : const ClampingScrollPhysics(),
+              // The pages either side are built, and their images loaded,
+              // before they slide in.
+              allowImplicitScrolling: true,
               itemBuilder: (BuildContext context, int index) {
                 final page = pages[index];
                 return ReaderPagedItem(
