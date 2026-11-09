@@ -114,6 +114,34 @@ void main() {
       expect(manager.pages, isNot(contains(wide)));
     });
 
+    test('putting the halves back together restores the page', () {
+      final manager = ChapterPreloadManager()..initialize(chapterPages(ch1, 4));
+      manager.splitPage(
+        1,
+        UChapDataPreload(ch1, null, null, null, null, 1, null, 1)
+          ..srcRect = const Rect.fromLTWH(0, 0, 500, 1400),
+        UChapDataPreload(ch1, null, null, null, null, 1, null, 1)
+          ..srcRect = const Rect.fromLTWH(500, 0, 500, 1400),
+      );
+      expect(manager.pages, hasLength(5));
+
+      final whole = page(ch1, 1);
+      manager.replacePage(1, [whole], count: 2);
+
+      expect(manager.pages, hasLength(4));
+      expect(manager.pages[1], same(whole));
+      expect(manager.pages.map((p) => p.pageIndex), [0, 1, 2, 3]);
+      expect(manager.pages.map((p) => p.index), [0, 1, 2, 3]);
+    });
+
+    test('a replacement past the end of the pages changes nothing', () {
+      final manager = ChapterPreloadManager()..initialize(chapterPages(ch1, 3));
+
+      manager.replacePage(2, [page(ch1, 2)], count: 2);
+
+      expect(manager.pages, hasLength(3));
+    });
+
     test('the two halves get different widget keys', () {
       final left = UChapDataPreload(ch1, null, null, null, null, 1, null, 1)
         ..srcRect = const Rect.fromLTWH(0, 0, 500, 1400);

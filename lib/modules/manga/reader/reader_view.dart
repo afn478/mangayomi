@@ -27,6 +27,7 @@ import 'package:mangayomi/modules/manga/reader/mixins/reader_input_and_mode_mixi
 import 'package:mangayomi/modules/manga/reader/services/page_navigation_service.dart';
 import 'package:mangayomi/modules/manga/reader/mixins/reader_memory_management.dart';
 import 'package:mangayomi/modules/manga/reader/mixins/reader_prefetch_mixin.dart';
+import 'package:mangayomi/modules/manga/reader/mixins/reader_split_pages_mixin.dart';
 import 'package:mangayomi/modules/manga/reader/mixins/reader_zoom_control.dart';
 import 'package:mangayomi/modules/reader_common/widgets/reader_app_bar.dart';
 import 'package:mangayomi/modules/manga/reader/widgets/reader_auto_scroll_sheet.dart';
@@ -199,6 +200,7 @@ class _MangaChapterPageGalleryState
         ReaderPrefetchMixin,
         ReaderZoomControl,
         PageNavigationMixin,
+        ReaderSplitPagesMixin,
         ReaderInputAndModeMixin,
         ReaderAutoScroll {
   @override
@@ -647,6 +649,8 @@ class _MangaChapterPageGalleryState
         });
       }
     });
+
+    listenToSplitSettings();
 
     return ReaderKeyboardHandler(
       onPreviousPage: () {
@@ -1298,6 +1302,7 @@ class _MangaChapterPageGalleryState
     _cachedReaderMode = value;
 
     final int actualIndex = forceIndex ?? getCurrentPagesActualIndex();
+    final directionChanged = _isReverseHorizontal != value.isRTL;
     ref.read(_currentReaderMode.notifier).state = value;
     if (!mounted) return;
     setState(() {
@@ -1346,6 +1351,8 @@ class _MangaChapterPageGalleryState
         );
       }
     }
+    // Split halves are in the order of the direction read.
+    if (directionChanged) rejoinSplitPages();
   }
 
   void _goBack(BuildContext context) {

@@ -394,13 +394,20 @@ class ChapterPreloadManager {
   void splitPage(int index, UChapDataPreload page1, UChapDataPreload page2) =>
       replacePage(index, [page1, page2]);
 
-  /// Puts [parts] in place of the page at [index], as when a page is split.
-  void replacePage(int index, List<UChapDataPreload> parts) {
-    if (index < 0 || index >= _pages.length || parts.isEmpty) return;
+  /// Puts [parts] in place of the [count] pages from [index]: the parts of a
+  /// page when it is split, or the page again when its halves are put back
+  /// together.
+  void replacePage(int index, List<UChapDataPreload> parts, {int count = 1}) {
+    if (index < 0 ||
+        count < 1 ||
+        index + count > _pages.length ||
+        parts.isEmpty) {
+      return;
+    }
     _pages
-      ..removeAt(index)
+      ..removeRange(index, index + count)
       ..insertAll(index, parts);
-    // Every page after the split moved down.
+    // Every page after the change moved.
     for (int i = index; i < _pages.length; i++) {
       _pages[i].pageIndex = i;
     }
