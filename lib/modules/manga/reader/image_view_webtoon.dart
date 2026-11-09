@@ -1,5 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:mangayomi/modules/manga/reader/widgets/reader_wheel_interceptor.dart';
+import 'package:mangayomi/utils/platform_utils.dart';
 import 'package:mangayomi/modules/manga/reader/utils/reader_motion.dart';
 import 'package:mangayomi/modules/manga/reader/utils/webtoon_scroll_physics.dart';
 import 'package:shiori/shiori.dart';
@@ -461,6 +464,47 @@ class _ImageViewWebtoonState extends ConsumerState<ImageViewWebtoon>
     }
   }
 
+  /// The mouse wheel, on desktop: with Ctrl (or Cmd) held it zooms the
+  /// strip about the pointer, as pinching does; on a horizontal strip it
+  /// scrolls it, as its list takes only a sideways wheel. Says whether it
+  /// used the event.
+  bool _handleWheel(PointerScrollEvent event) {
+    final keys = HardwareKeyboard.instance;
+    final dy = event.scrollDelta.dy;
+    if (keys.isControlPressed || keys.isMetaPressed) {
+      if (dy == 0) return true;
+      if (_zoomAnimationController.isAnimating) {
+        _zoomAnimationController.stop();
+      }
+      final targetScale = (_scale * (dy < 0 ? 1.2 : 1 / 1.2)).clamp(1.0, 5.0);
+      final screen = MediaQuery.sizeOf(context);
+      final focal =
+          event.localPosition - Offset(screen.width / 2, screen.height / 2);
+      var target = Offset.zero;
+      if (targetScale > 1.0) {
+        final maxDx = (screen.width * (targetScale - 1)) / 2;
+        final maxDy = (screen.height * (targetScale - 1)) / 2;
+        final moved = focal - (focal - _offset) * (targetScale / _scale);
+        target = Offset(
+          moved.dx.clamp(-maxDx, maxDx),
+          moved.dy.clamp(-maxDy, maxDy),
+        );
+      }
+      _scale = targetScale;
+      _offset = target;
+      _updateMatrix();
+      return true;
+    }
+    if (widget.isHorizontalContinuous &&
+        dy != 0 &&
+        event.scrollDelta.dx == 0 &&
+        widget.scrollController.hasClients) {
+      widget.scrollController.position.pointerScroll(dy);
+      return true;
+    }
+    return false;
+  }
+
   @override
   void dispose() {
     _zoomAnimationController.dispose();
@@ -488,6 +532,23 @@ class _ImageViewWebtoonState extends ConsumerState<ImageViewWebtoon>
     );
     final itemCount = _calculateItemCount(singleFirst);
 
+    return ReaderWheelInterceptor(
+      onWheel: isDesktop ? _handleWheel : null,
+      child: _buildStrip(
+        itemCount,
+        singleFirst,
+        dualPageRotateToFit,
+        dualPageRotateToFitInvert,
+      ),
+    );
+  }
+
+  Widget _buildStrip(
+    int itemCount,
+    bool singleFirst,
+    bool dualPageRotateToFit,
+    bool dualPageRotateToFitInvert,
+  ) {
     return RawGestureDetector(
       behavior: HitTestBehavior.translucent,
       gestures: <Type, GestureRecognizerFactory>{
