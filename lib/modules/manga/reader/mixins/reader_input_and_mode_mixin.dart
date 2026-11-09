@@ -196,7 +196,9 @@ mixin ReaderInputAndModeMixin<T extends ConsumerStatefulWidget>
     final keys = HardwareKeyboard.instance;
     if (keys.isControlPressed || keys.isMetaPressed) {
       final dy = event.scrollDelta.dy;
-      if (dy != 0) zoomBy(dy < 0 ? 1.2 : 1 / 1.2);
+      if (dy != 0) {
+        zoomBy(dy < 0 ? 1.2 : 1 / 1.2, focalPoint: event.localPosition);
+      }
       return;
     }
     if (isCurrentPageZoomed) {

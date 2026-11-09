@@ -86,7 +86,10 @@ mixin ReaderZoomControl<T extends ConsumerStatefulWidget>
   /// Zooms the page on show by [factor] from the keyboard, about its centre:
   /// the single page through its image view, a double spread through its
   /// photo view. The continuous modes zoom with the pointer only.
-  void zoomBy(double factor) {
+  ///
+  /// [focalPoint], where the wheel was turned in the reader, stays put, as
+  /// it does in a browser; without one the page zooms about its centre.
+  void zoomBy(double factor, {Offset? focalPoint}) {
     final index = currentZoomPageViewIndex ?? 0;
     final spread = doublePageControllers[index];
     if (isDoublePageActiveForZoom && spread != null) {
@@ -96,6 +99,15 @@ mixin ReaderZoomControl<T extends ConsumerStatefulWidget>
       if (next <= base * 1.01) {
         _doublePageBaseScale.remove(index);
         spread.reset();
+      } else if (focalPoint != null) {
+        // The spread's position is from the centre of the view.
+        final size = MediaQuery.sizeOf(context);
+        final focal = focalPoint - Offset(size.width / 2, size.height / 2);
+        final ratio = next / current;
+        spread.updateMultiple(
+          scale: next,
+          position: spread.position * ratio + focal * (1 - ratio),
+        );
       } else {
         spread.scale = next;
       }
@@ -104,6 +116,14 @@ mixin ReaderZoomControl<T extends ConsumerStatefulWidget>
     final page = pageControllers[pageViewToActualIndexForZoom(index)];
     if (page == null || !page.isReady) return;
     final next = (page.scale * factor).clamp(page.minScale, page.minScale * 8);
+    if (focalPoint != null) {
+      final ratio = next / page.scale;
+      page.setScaleAndTranslation(
+        next,
+        focalPoint - (focalPoint - page.translation) * ratio,
+      );
+      return;
+    }
     page.animateScaleAndCenter(
       next,
       page.center ?? Offset(page.sWidth / 2, page.sHeight / 2),

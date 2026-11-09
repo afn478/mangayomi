@@ -33,6 +33,7 @@ import 'package:mangayomi/modules/manga/reader/widgets/reader_auto_scroll_sheet.
 import 'package:mangayomi/modules/manga/reader/widgets/reader_bottom_bar.dart';
 import 'package:mangayomi/modules/manga/reader/widgets/reader_overlays.dart';
 import 'package:mangayomi/modules/manga/reader/widgets/reader_page_content.dart';
+import 'package:mangayomi/modules/manga/reader/widgets/reader_wheel_interceptor.dart';
 import 'package:mangayomi/modules/manga/reader/widgets/reader_settings_modal.dart';
 import 'package:mangayomi/modules/manga/reader/widgets/reader_slider_preview_overlay.dart';
 import 'package:mangayomi/modules/reader_common/widgets/auto_scroll_button.dart';
@@ -705,11 +706,15 @@ class _MangaChapterPageGalleryState
             bottom: false,
             child: Stack(
               children: [
-                Listener(
-                  // A wheel turns the page in the paged modes, on desktop;
-                  // the continuous ones scroll with it already.
-                  onPointerSignal: isDesktop && !readerMode.isContinuous
-                      ? onPointerSignal
+                ReaderWheelInterceptor(
+                  // A wheel turns the page in the paged modes, on desktop,
+                  // before a vertical page view scrolls with it; the strip
+                  // handles its own.
+                  onWheel: isDesktop && !readerMode.isContinuous
+                      ? (event) {
+                          onPointerSignal(event);
+                          return true;
+                        }
                       : null,
                   child: ReaderPageContent(
                     pages: pages,
